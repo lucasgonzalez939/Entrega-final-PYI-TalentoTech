@@ -80,6 +80,9 @@ def seleccionar_opcion():
         case 5:
             opcion_salir()
 
+        else:
+            print("Ingrese una opción válida...")
+
 
 
 
