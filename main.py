@@ -100,8 +100,15 @@ def opcion_nuevo_producto():
 
 #Función para ver todos los productos en la lista.
 def opcion_ver_productos():
-    print("Productos guardados: ")
-    
+    print("Productos guardados: \n")
+
+    for p in productos:
+        print("Nombre:",p["nombre"])
+        print("Categoría:", p["categoria"])
+        print("Precio: $", p["precio"])
+        print("***************************************** \n")
+
+
 
 
 #Funcion para buscar productos almacenados en la lista por nombre o letra.
