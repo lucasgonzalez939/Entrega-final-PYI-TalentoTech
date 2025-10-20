@@ -169,10 +169,7 @@ def opcion_buscar_productos():
 #Funcion para buscar productos por indice
 def opcion_buscar_producto_por_index(indice):
     if indice != 0:
-        print("Indice no es cero, continuando")
-        print(productos.index(indice))
-        resultado = {productos.index(indice)}
-        print(resultado)
+        resultado = productos[indice]
     else:
         print("Error buscando por indice")
     return resultado
@@ -185,10 +182,9 @@ def opcion_eliminar_producto():
     if paraEliminar != "":
         indice = int(paraEliminar)
         entrada = opcion_buscar_producto_por_index(indice)
-        print(entrada)
-
-        confirmacion = input("Va a eliminar ", entrada["nombre"], "? S/N \n")
-        if confirmacion.lower == "s":
+        print(entrada["nombre"])
+        confirmacion = input("¿Confirmar eliminación? S/N \n")
+        if confirmacion == "s" or confirmacion == "S":
             productos.pop(indice)
             print("Eliminando ", entrada["nombre"])
         else:
