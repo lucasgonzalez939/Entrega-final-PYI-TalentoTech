@@ -42,16 +42,32 @@
 # El programa debe continuar funcionando 
 # hasta que se elija una opción para salir.
 
+
+
 global corriendo
 corriendo = True
 
+
+#Saludo de bienvenida
 print("Sistema de gestión de productos")
 
-productos = []
+
+#Variable global que almacena los productos (hardcodeada con ejemplos)
+global productos
+productos = [{"nombre":"SSD 256GB", "categoria":"Almacenamiento", "precio":"16580"},
+             {"nombre":"SSD 480GB", "categoria":"Almacenamiento", "precio":"20450"},
+             {"nombre":"Procesador i7-11570F", "categoria":"Procesadores", "precio":"170580"},
+             {"nombre":"Procesador i3-10400H", "categoria":"Procesadores", "precio":"110500"},
+             {"nombre":"Memoria DDR4 8GB", "categoria":"Memorias", "precio":"21000"},
+             {"nombre":"Memoria DDR4 16GB", "categoria":"Memorias", "precio":"32000"},
+             {"nombre":"Memoria DDR4 32GB", "categoria":"Memorias", "precio":"48000"},
+            ] #Lista para almacenar los productos.
+
+
 
 #Mostrar el menu principal.
 def menu_principal():
-    print("Ingrese el número de la opción deseada:")
+    print("\n Ingrese el número de la opción deseada:")
     print("1 - Ingresar nuevo producto")
     print("2 - Ver productos")
     print("3 - Buscar producto")
@@ -60,26 +76,36 @@ def menu_principal():
     seleccionar_opcion()
 
 
+
 #Función de selección principal.
 def seleccionar_opcion():
-    opcion = int(input("Opción: "))
-    print("Seleccionada opción",opcion)
-    match opcion:
-        case 1:
-            opcion_nuevo_producto()
+    try:
+        opcion = int(input("Opción: "))
+        if opcion > 0 and opcion <= 5:
+            print("Seleccionada opción",opcion)
+            match opcion:
+                case 1:
+                    opcion_nuevo_producto()
             
-        case 2:
-            opcion_ver_productos()
+                case 2:
+                    opcion_ver_productos()
 
-        case 3:
-            opcion_buscar_productos()
+                case 3:
+                    opcion_buscar_productos()
 
-        case 4:
-            opcion_eliminar_producto()
+                case 4:
+                    opcion_eliminar_producto()
 
-        case 5:
-            opcion_salir()
+                case 5:
+                    opcion_salir()
 
+                case _:
+                    print("Ingrese una opción...")
+        else:
+            print("Opcion invalida, ingrese una opción \n")
+                
+    except:
+        print("Entrada vacia, ingrese una opción \n")
 
 
 
@@ -90,6 +116,7 @@ def opcion_salir():
     corriendo = False
 
 
+
 #Función para añadir un nuevo producto.
 def opcion_nuevo_producto():
     nombreProducto = input("Ingresa el nombre del nuevo producto: ")
@@ -98,37 +125,93 @@ def opcion_nuevo_producto():
     guardar(nombreProducto, categoriaProducto, precioProducto)
     
 
+
 #Función para ver todos los productos en la lista.
 def opcion_ver_productos():
-    print("Productos guardados: \n")
-
-    for p in productos:
-        print("Nombre:",p["nombre"])
-        print("Categoría:", p["categoria"])
-        print("Precio: $", p["precio"])
-        print("***************************************** \n")
-
+    
+    if len(productos) != 0:
+        print("Productos guardados: \n")
+        for p in productos:
+            print("Index:", productos.index(p), "|",
+                "Nombre:", p["nombre"], "|",
+                "Categoría:", p["categoria"], "|",
+                "Precio: $", p["precio"])
+    else:
+        print("Aún no hay productos guardados... \n")
 
 
 
 #Funcion para buscar productos almacenados en la lista por nombre o letra.
-def opcion_buscar_productos(busqueda):
-    print("Buscando {busqueda}")
+def opcion_buscar_productos():
+    resultados = []
+    busqueda = input("Ingrese el nombre de un producto o categoria para buscarlo: ")
+    if busqueda != "":
+        print("Buscando ", busqueda)
+        for p in productos:
+            if  busqueda in p["nombre"] or busqueda in p["categoria"]:
+                resultados.append(p)
+                
+        if len(resultados) != 0:
+            print("Se encontraron ", len(resultados), " resultados")
+            for r in resultados:
+                print("Index:", productos.index(r), "|",
+                "Nombre:", r["nombre"], "|",
+                "Categoría:", r["categoria"], "|",
+                "Precio: $", r["precio"])
+        else:
+            print("No se encontraron resultados \n")
+
+    else:
+        print("Debe ingresar un producto para buscar \n")
+
+
+
+#Funcion para buscar productos por indice
+def opcion_buscar_producto_por_index(indice):
+    if indice != 0:
+        print("Indice no es cero, continuando")
+        print(productos.index(indice))
+        resultado = {productos.index(indice)}
+        print(resultado)
+    else:
+        print("Error buscando por indice")
+    return resultado
+
 
 
 #Funcion para eliminar productos 
-def opcion_eliminar_producto(idProducto):
-    print("Eliminando {idProducto}")
+def opcion_eliminar_producto():
+    paraEliminar = input("Ingrese el numero de Index del producto que desea eliminar: ")
+    if paraEliminar != "":
+        indice = int(paraEliminar)
+        entrada = opcion_buscar_producto_por_index(indice)
+        print(entrada)
+
+        confirmacion = input("Va a eliminar ", entrada["nombre"], "? S/N \n")
+        if confirmacion.lower == "s":
+            productos.pop(indice)
+            print("Eliminando ", entrada["nombre"])
+        else:
+            print("Nada se eliminará \n")
+    else:
+        print("Nada para eliminar, ingrese un Index")
+
 
 
 #Función para guardar el nuevo producto al final de la lista.
 def guardar(nombre, categoria, precio):
-    nuevaEntrada = {
-        "nombre":nombre,
-        "categoria":categoria,
-        "precio":precio          
-    }
-    productos.append(nuevaEntrada)
+    if nombre != "" and categoria != "" and precio != "":
+        nuevaEntrada = {
+            "nombre":nombre,
+            "categoria":categoria,
+            "precio":precio
+        }
+        productos.append(nuevaEntrada)
+        print(nombre, " guardado")
+
+    else:
+        print("Faltan datos... \n")
+
 
 
 #Bucle principal, se detiene cuando se selecciona la opción 5 y la variable corriendo se vuelve False
