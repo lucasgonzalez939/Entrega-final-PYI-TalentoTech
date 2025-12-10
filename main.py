@@ -1,3 +1,6 @@
+#ATENCION
+#Falta implementar un par de cosas como la verificacion y alertas de stock, pero no tengo mucho más tiempo ahora mismo
+
 import sqlite3 #Importamos la libreria sqlite3 para almacenar en la base de datos local
 import cargar_datos_ejemplo  #Importamos la funcion para cargar datos de ejemplo
 import crud  #Importamos las funciones CRUD para la base de datos
