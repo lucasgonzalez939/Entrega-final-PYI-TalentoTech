@@ -1,78 +1,67 @@
-#Requerimientos del proyecto
-# Ingreso de datos de productos: 
-# El sistema debe permitir ingresar datos básicos de los productos: 
-# nombre, categoría, y precio (sin centavos). 
-# Estos datos deben almacenarse en una lista, 
-# donde cada producto sea representado/a 
-# como una sublista de tres elementos (nombre, categoría, y precio).
+import sqlite3 #Importamos la libreria sqlite3 para almacenar en la base de datos local
+import cargar_datos_ejemplo  #Importamos la funcion para cargar datos de ejemplo
+import crud  #Importamos las funciones CRUD para la base de datos
+from crud import create, read, update, delete  #Importamos las funciones CRUD específicas
 
-# Visualización de productos registrados: 
-# El programa debe incluir una funcionalidad 
-# para mostrar en pantalla todos los productos ingresados. 
-# La información debe presentarse de manera ordenada y legible, 
-# con cada producto numerado.
+#Conectamos o creamos la base de datos inventario.db
+db = sqlite3.connect("inventario.db")
 
-# Búsqueda de productos: 
-# El sistema debe permitir buscar productos por su nombre. 
-# Si encuentra coincidencias, 
-# debe mostrar la información completa de los productos que coincidan. Si
-# no hay coincidencias, debe informar que no se encontraron resultados.
+#Creamos el cursor para ejecutar comandos SQL
+cursor = db.cursor()
 
-# Eliminación de productos: 
-# El sistema debe permitir eliminar un producto de la lista, 
-# identificándolo por su posición (número) en la lista.
+#Creamos la tabla inventario si no existe aún
+cursor.execute('''CREATE TABLE IF NOT EXISTS inventario(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    descripcion TEXT,
+    cantidad INTEGER NOT NULL,
+    precio REAL NOT NULL,
+    categoria TEXT,
+    fecha_ingreso DATE NOT NULL,
+    fecha_actualizacion DATE,
+    alerta_stock INTEGER DEFAULT 0)''')
 
+#Confirmamos si la tabla inventario existe llamando a sqlite_master
+res = cursor.execute('''SELECT name FROM sqlite_master''')
 
-# Requisitos:
-# Usar listas para almacenar y gestionar los datos. 
+#Si la tabla no se creó, reportamos y salimos del programa
+if res.fetchone()[0] != 'inventario':
+    print("La tabla no existe, vuelva a intentar. Saliendo...")
+    exit()
+else:
+    print("Base de datos cargada correctamente")
 
-# Incorporar bucles while y for según corresponda. 
-
-# Validar entradas del usuario o usuaria, 
-# asegurándote de que no se ingresen datos vacíos o incorrectos.
-
-# Utilizar condicionales para gestionar las opciones del menú 
-# y las validaciones necesarias.
-
-# Presentar un menú que permita elegir 
-# entre las funcionalidades disponibles: 
-# agregar productos, visualizar productos, 
-# buscar productos y eliminar productos.
-
-# El programa debe continuar funcionando 
-# hasta que se elija una opción para salir.
+if len(read(db)) == 0:
+    cargar_datos_ejemplo.cargar_datos_ejemplo(db) #Cargamos datos de ejemplo si la tabla está vacía
 
 
 
+#Variable global para controlar el bucle principal
 global corriendo
 corriendo = True
+
 
 
 #Saludo de bienvenida
 print("Sistema de gestión de productos")
 
+#Implementar aqui el llamado a la funcion de reporte de alertas de stock y mostrarlas al iniciar
 
-#Variable global que almacena los productos (hardcodeada con ejemplos)
-global productos
-productos = [{"nombre":"SSD 256GB", "categoria":"Almacenamiento", "precio":"16580"},
-             {"nombre":"SSD 480GB", "categoria":"Almacenamiento", "precio":"20450"},
-             {"nombre":"Procesador i7-11570F", "categoria":"Procesadores", "precio":"170580"},
-             {"nombre":"Procesador i3-10400H", "categoria":"Procesadores", "precio":"110500"},
-             {"nombre":"Memoria DDR4 8GB", "categoria":"Memorias", "precio":"21000"},
-             {"nombre":"Memoria DDR4 16GB", "categoria":"Memorias", "precio":"32000"},
-             {"nombre":"Memoria DDR4 32GB", "categoria":"Memorias", "precio":"48000"},
-            ] #Lista para almacenar los productos.
+
+
 
 
 
 #Mostrar el menu principal.
 def menu_principal():
     print("\n Ingrese el número de la opción deseada:")
-    print("1 - Ingresar nuevo producto")
-    print("2 - Ver productos")
-    print("3 - Buscar producto")
-    print("4 - Eliminar producto")
-    print("5 - Salir")
+    print("1 - Registrar nuevo producto")
+    print("2 - Ver productos registrados")
+    print("3 - Actualizar producto")
+    print("4 - Buscar producto")
+    print("5 - Eliminar producto")
+    print("6 - Alertas de stock")
+    print("7 - Salir")
     seleccionar_opcion()
 
 
@@ -81,7 +70,7 @@ def menu_principal():
 def seleccionar_opcion():
     try:
         opcion = int(input("Opción: "))
-        if opcion > 0 and opcion <= 5:
+        if opcion > 0 and opcion <= 7:
             print("Seleccionada opción",opcion)
             match opcion:
                 case 1:
@@ -91,12 +80,18 @@ def seleccionar_opcion():
                     opcion_ver_productos()
 
                 case 3:
-                    opcion_buscar_productos()
+                    opcion_actualizar_producto()
 
                 case 4:
-                    opcion_eliminar_producto()
+                    opcion_buscar_productos()
 
                 case 5:
+                    opcion_eliminar_producto()
+
+                case 6:
+                    print("Funcionalidad de alertas de stock no implementada aún")
+
+                case 7:
                     opcion_salir()
 
                 case _:
@@ -107,39 +102,21 @@ def seleccionar_opcion():
     except:
         print("Entrada vacia, ingrese una opción \n")
 
-
-
-#Función para cerrar el programa.
-def opcion_salir():
-    print("Gracias por utilizar nuestro sistema. Saliendo...")
-    global corriendo
-    corriendo = False
-
-
-
 #Función para añadir un nuevo producto.
 def opcion_nuevo_producto():
-    nombreProducto = input("Ingresa el nombre del nuevo producto: ")
-    categoriaProducto = input("Ingresa la categoría del producto: ")
-    precioProducto = input("Ingresa el precio del nuevo producto: ")
-    guardar(nombreProducto, categoriaProducto, precioProducto)
-    
+    nombre = input("Ingresa el nombre del nuevo producto: ")
+    descripcion = input("Ingresa la descripción del nuevo producto: ")
+    cantidad = input("Ingresa la cantidad del nuevo producto: ")
+    precio = input("Ingresa el precio del nuevo producto: ")
+    categoria = input("Ingresa la categoría del producto: ")
+    alerta_stock = input("Ingresa el numero de alerta de stock del nuevo producto: ")
+    create(db, nombre, descripcion, cantidad, precio, categoria, alerta_stock)
+    print("Nuevo producto registrado: ", nombre)
 
 
-#Función para ver todos los productos en la lista.
-def opcion_ver_productos():
-    
-    if len(productos) != 0:
-        print("Productos guardados: \n")
-        for p in productos:
-            print("Index:", productos.index(p), "|",
-                "Nombre:", p["nombre"], "|",
-                "Categoría:", p["categoria"], "|",
-                "Precio: $", p["precio"])
-    else:
-        print("Aún no hay productos guardados... \n")
 
 
+#FUNCIONES DE INTERFAZ DE USUARIO
 
 #Funcion para buscar productos almacenados en la lista por nombre o letra.
 def opcion_buscar_productos():
@@ -147,17 +124,17 @@ def opcion_buscar_productos():
     busqueda = input("Ingrese el nombre de un producto o categoria para buscarlo: ")
     if busqueda != "":
         print("Buscando ", busqueda)
-        for p in productos:
-            if  busqueda in p["nombre"] or busqueda in p["categoria"]:
-                resultados.append(p)
-                
+        resultados = buscar_nombre_categoria(busqueda)
         if len(resultados) != 0:
             print("Se encontraron ", len(resultados), " resultados")
             for r in resultados:
-                print("Index:", productos.index(r), "|",
-                "Nombre:", r["nombre"], "|",
-                "Categoría:", r["categoria"], "|",
-                "Precio: $", r["precio"])
+                print("Index:", r[0], "|",
+                "Nombre:", r[1], "|",
+                "Descripcion:", r[2], "|",
+                "Categoría:", r[5], "|",
+                "Precio: $", r[4],
+                "Cantidad:", r[3], "\n")
+
         else:
             print("No se encontraron resultados \n")
 
@@ -167,9 +144,9 @@ def opcion_buscar_productos():
 
 
 #Funcion para buscar productos por indice
-def opcion_buscar_producto_por_index(indice):
-    if indice != 0:
-        resultado = productos[indice]
+def opcion_buscar_producto_por_id(id):
+    if id != None:
+        resultado = buscar_id(id)
     else:
         print("Error buscando por indice")
     return resultado
@@ -178,36 +155,81 @@ def opcion_buscar_producto_por_index(indice):
 
 #Funcion para eliminar productos 
 def opcion_eliminar_producto():
-    paraEliminar = input("Ingrese el numero de Index del producto que desea eliminar: ")
+    paraEliminar = input("Ingrese el numero de id del producto que desea eliminar: ")
     if paraEliminar != "":
-        indice = int(paraEliminar)
-        entrada = opcion_buscar_producto_por_index(indice)
+        identificador = int(paraEliminar)
+        entrada = buscar_id(identificador)
         print(entrada["nombre"])
-        confirmacion = input("¿Confirmar eliminación? S/N \n")
-        if confirmacion == "s" or confirmacion == "S":
-            productos.pop(indice)
-            print("Eliminando ", entrada["nombre"])
-        else:
-            print("Nada se eliminará \n")
+        delete(db, identificador)
     else:
-        print("Nada para eliminar, ingrese un Index")
+        print("Nada para eliminar, ingrese un ID de producto")
 
-
-
-#Función para guardar el nuevo producto al final de la lista.
-def guardar(nombre, categoria, precio):
-    if nombre != "" and categoria != "" and precio != "":
-        nuevaEntrada = {
-            "nombre":nombre,
-            "categoria":categoria,
-            "precio":precio
+def buscar_id(id):
+    cursor = db.cursor()
+    cursor.execute('''SELECT * FROM inventario WHERE id = ?''', (id,))
+    producto = cursor.fetchone()
+    if producto:
+        producto_dict = {
+            "id": producto[0],
+            "nombre": producto[1],
+            "descripcion": producto[2],
+            "cantidad": producto[3],
+            "precio": producto[4],
+            "categoria": producto[5],
+            "fecha_ingreso": producto[6],
+            "fecha_actualizacion": producto[7],
+            "alerta_stock": producto[8]
         }
-        productos.append(nuevaEntrada)
-        print(nombre, " guardado")
-
+        return producto_dict
     else:
-        print("Faltan datos... \n")
+        print(f"No se encontró ningún producto con ID {id}")
+        return None
 
+
+#Funcion para buscar productos por nombre o categoria
+def buscar_nombre_categoria(busqueda):
+    cursor = db.cursor()
+    cursor.execute('''SELECT * FROM inventario WHERE nombre LIKE ? OR categoria LIKE ?''', (f'%{busqueda}%', f'%{busqueda}%'))
+    productos = cursor.fetchall()
+    if productos:
+        return productos
+    else:
+        print(f"No se encontraron productos con el nombre o categoría '{busqueda}'")
+
+
+def opcion_ver_productos():
+    productos = read(db)
+    if productos:
+        for producto in productos:
+            print(f"ID: {producto[0]}, Nombre: {producto[1]}, Categoría: {producto[5]}, Precio: {producto[4]}")
+    else:
+        print("No hay productos registrados en la base de datos.")
+
+
+def opcion_actualizar_producto():
+    id_actualizar = input("Ingrese el ID del producto que desea actualizar: ")
+    if id_actualizar != "":
+        identificador = int(id_actualizar)
+        producto = buscar_id(identificador)
+        if producto:
+            print(f"Actualizando producto: {producto['nombre']}")
+            nombre = input(f"Nuevo nombre (actual: {producto['nombre']}): ") or producto['nombre']
+            descripcion = input(f"Nueva descripción (actual: {producto['descripcion']}): ") or producto['descripcion']
+            cantidad = input(f"Nueva cantidad (actual: {producto['cantidad']}): ") or producto['cantidad']
+            precio = input(f"Nuevo precio (actual: {producto['precio']}): ") or producto['precio']
+            categoria = input(f"Nueva categoría (actual: {producto['categoria']}): ") or producto['categoria']
+            alerta_stock = input(f"Nuevo alerta de stock (actual: {producto['alerta_stock']}): ") or producto['alerta_stock']
+            update(db, identificador, nombre, descripcion, cantidad, precio, categoria, alerta_stock)
+        else:
+            print("Producto no encontrado.")
+    else:
+        print("Debe ingresar un ID de producto para actualizar.")
+
+#Función para cerrar el programa.
+def opcion_salir():
+    print("Gracias por utilizar nuestro sistema. Saliendo...")
+    global corriendo
+    corriendo = False
 
 
 #Bucle principal, se detiene cuando se selecciona la opción 5 y la variable corriendo se vuelve False
