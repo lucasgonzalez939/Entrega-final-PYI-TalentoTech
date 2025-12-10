@@ -54,7 +54,6 @@ print("Sistema de gestión de productos")
 
 
 
-
 #Mostrar el menu principal.
 def menu_principal():
     print("\n Ingrese el número de la opción deseada:")
@@ -92,7 +91,7 @@ def seleccionar_opcion():
                     opcion_eliminar_producto()
 
                 case 6:
-                    print("Funcionalidad de alertas de stock no implementada aún")
+                    opcion_alertas_stock()
 
                 case 7:
                     opcion_salir()
@@ -228,6 +227,17 @@ def opcion_actualizar_producto():
     else:
         print("Debe ingresar un ID de producto para actualizar.")
 
+def opcion_alertas_stock():
+    cursor = db.cursor()
+    cursor.execute('''SELECT * FROM inventario WHERE cantidad <= alerta_stock''')
+    productos_bajo_stock = cursor.fetchall()
+    if productos_bajo_stock:
+        print("Productos con alerta de stock:")
+        for producto in productos_bajo_stock:
+            print(f"ID: {producto[0]}, Nombre: {producto[1]}, Cantidad: {producto[3]}, Alerta de Stock: {producto[8]}")
+    else:
+        print("No hay productos con alerta de stock.")
+
 #Función para cerrar el programa.
 def opcion_salir():
     print("Gracias por utilizar nuestro sistema. Saliendo...")
@@ -237,6 +247,7 @@ def opcion_salir():
 
 #Bucle principal, se detiene cuando se selecciona la opción 5 y la variable corriendo se vuelve False
 while corriendo == True:
+    opcion_alertas_stock()
     menu_principal()
     if corriendo == False:
         break
